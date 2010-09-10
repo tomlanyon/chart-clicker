@@ -24,8 +24,12 @@ override 'prepare' => sub {
 
     my ($dstart, $dend);
     eval {
-        $dstart = DateTime->from_epoch(epoch => $self->range->lower);
-        $dend = DateTime->from_epoch(epoch => $self->range->upper);
+        $dstart = $self->range->lower->isa('DateTime')
+                    ? $self->range->lower
+                    : DateTime->from_epoch(epoch => $self->range->lower);
+        $dend = $self->range->upper->isa('DateTime')
+                    ? $self->range->upper
+                    : DateTime->from_epoch(epoch => $self->range->upper);
     };
 
     if(!defined($dstart) || !defined($dend)) {
@@ -112,6 +116,8 @@ sub format_value {
     my $self = shift();
     my $value = shift();
 
+    return $self->format_dt($value) if $value->isa('DateTime');
+
     my %dtargs = (
         'epoch' => $value
     );
@@ -120,6 +126,11 @@ sub format_value {
     }
     my $dt = DateTime->from_epoch(%dtargs);
 
+    return $self->format_dt($dt);
+}
+
+sub format_dt {
+    my ($self, $dt) = @_;
     return $dt->strftime($self->format());
 }
 
